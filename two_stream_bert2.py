@@ -85,7 +85,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
 parser.add_argument('-c', '--continue', dest='contine', action='store_true',
                     help='evaluate model on validation set')
 
-logging.basicConfig(filename='log.log', encoding='utf-8', level=logging.INFO)
+logging.basicConfig(filename='/data/AUTSL/log.log', level=logging.INFO)
 
 #python two_stream_bert2.py --split=1 --arch=rgb_resneXt3D64f101_bert10_FRMB --workers=2 --batch-size=8 --iter-size=16 --print-freq=1 --dataset=sign --lr=1e-5
 
@@ -124,7 +124,7 @@ def main():
     width = int(340 * scale)
     height = int(256 * scale)
     
-    saveLocation="./checkpoint/"+args.dataset+"_"+args.arch+"_split"+str(args.split)
+    saveLocation="/data/AUTSL/checkpoint/"+args.dataset+"_"+args.arch+"_split"+str(args.split)
     if not os.path.exists(saveLocation):
         os.makedirs(saveLocation)
     writer = SummaryWriter(saveLocation)

@@ -1,23 +1,28 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: LTM
+  name: ltm
 spec:
   template:
     spec:
       containers:
-      - name: LTM
+      - name: ltm
         image: byeongjokim/ltm:latest
-        command: ["python",  "two_stream_bert2.py", "--batch-size 32"]
+        command: ["python",  "two_stream_bert2.py", "-b", "32", "--print-freq", "100", "-j", "4"]
         resources:
           limits:
-            nvidia.com/gpu: 6
+            nvidia.com/gpu: 8
         volumeMounts:
         - mountPath: /data
           name: videos
+        - mountPath: /dev/shm
+          name: dshm
       restartPolicy: Never
       volumes:
       - name: videos
         hostPath:
           path: /nfs/vod_tag02/data
+      - name: dshm
+        emptyDir:
+          medium: Memory
   backoffLimit: 2
