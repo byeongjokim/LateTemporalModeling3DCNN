@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Dec  4 10:42:00 2019
-
 @author: esat
 """
 
@@ -14,7 +13,7 @@ import numpy as np
 
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 import torch
 import torch.nn as nn
@@ -42,14 +41,14 @@ dataset_names = sorted(name for name in datasets.__all__)
 parser = argparse.ArgumentParser(description='PyTorch Two-Stream Action Recognition')
 #parser.add_argument('--data', metavar='DIR', default='./datasets/ucf101_frames',
 #                    help='path to dataset')
-parser.add_argument('--settings', metavar='DIR', default='./datasets/settings',
+parser.add_argument('--settings', metavar='DIR', default='/data/video/vod_tag02/data/AUSTL/train_img_c',
                     help='path to datset setting files')
 #parser.add_argument('--modality', '-m', metavar='MODALITY', default='rgb',
 #                    choices=["rgb", "flow"],
 #                    help='modality: rgb | flow')
-parser.add_argument('--dataset', '-d', default='hmdb51',
-                    choices=["ucf101", "hmdb51", "smtV2", "window"],
-                    help='dataset: ucf101 | hmdb51 | smtV2')
+parser.add_argument('--dataset', '-d', default='sign',
+                    choices=["ucf101", "hmdb51", "smtV2", "window", "sign"],
+                    help='dataset: ucf101 | hmdb51 | smtV2 | sign')
 
 parser.add_argument('--arch', '-a', default='rgb_resneXt3D64f101_bert10_FRMB',
                     choices=model_names,
@@ -171,6 +170,8 @@ def main():
         dataset='./datasets/smtV2_frames'
     elif args.dataset=='window':
         dataset='./datasets/window_frames'
+    elif args.dataset=="sign":
+        dataset="/data/video/vod_tag02/data/AUSTL/train_img_c"
     else:
         print("No convenient dataset entered, exiting....")
         return 0
@@ -398,6 +399,9 @@ def build_model():
     elif args.dataset=='window':
         print('model path is: %s' %(model_path))
         model = models.__dict__[args.arch](modelPath=model_path, num_classes=3, length=args.num_seg)
+    elif args.dataset=='sign':
+        print('model path is: %s' %(model_path))
+        model = models.__dict__[args.arch](modelPath=model_path, num_classes=226, length=args.num_seg)
     
     if torch.cuda.device_count() > 1:
         model=torch.nn.DataParallel(model)
@@ -414,6 +418,8 @@ def build_model_validate():
         model=models.__dict__[args.arch](modelPath='', num_classes=101,length=args.num_seg)
     elif args.dataset=='hmdb51':
         model=models.__dict__[args.arch](modelPath='', num_classes=51,length=args.num_seg)
+    elif args.dataset=='sign':
+        model=models.__dict__[args.arch](modelPath='', num_classes=226,length=args.num_seg)
    
     if torch.cuda.device_count() > 1:
         model=torch.nn.DataParallel(model) 
@@ -432,6 +438,8 @@ def build_model_continue():
         model=models.__dict__[args.arch](modelPath='', num_classes=101,length=args.num_seg)
     elif args.dataset=='hmdb51':
         model=models.__dict__[args.arch](modelPath='', num_classes=51,length=args.num_seg)
+    elif args.dataset=='sign':
+        model=models.__dict__[args.arch](modelPath='', num_classes=226,length=args.num_seg)
    
     if torch.cuda.device_count() > 1:
         model=torch.nn.DataParallel(model) 
