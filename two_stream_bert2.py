@@ -74,7 +74,7 @@ parser.add_argument('--weight-decay', '--wd', default=1e-3, type=float,
                     metavar='W', help='weight decay (default: 1e-3)')
 parser.add_argument('--print-freq', default=100, type=int,
                     metavar='N', help='print frequency (default: 400)')
-parser.add_argument('--save-freq', default=100, type=int,
+parser.add_argument('--save-freq', default=10, type=int,
                     metavar='N', help='save frequency (default: 1)')
 parser.add_argument('--num-seg', default=1, type=int,
                     metavar='N', help='Number of segments in dataloader (default: 1)')
