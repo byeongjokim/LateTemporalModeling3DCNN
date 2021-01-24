@@ -8,7 +8,7 @@ spec:
       containers:
       - name: LTM
         image: byeongjokim/ltm:latest
-        command: ["python",  "two_stream_bert2.py"]
+        command: ["python",  "two_stream_bert2.py", "--batch-size 32"]
         resources:
           limits:
             nvidia.com/gpu: 6
