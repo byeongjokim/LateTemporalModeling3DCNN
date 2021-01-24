@@ -6,7 +6,6 @@ import random
 import numpy as np
 import cv2
 
-
 def find_classes(dir):
     classes = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
     classes.sort()

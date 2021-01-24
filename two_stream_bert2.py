@@ -10,10 +10,10 @@ import time
 import argparse
 import shutil
 import numpy as np
+import logging
 
-
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 import torch
 import torch.nn as nn
@@ -29,7 +29,7 @@ import models
 import datasets
 import swats
 from opt.AdamW import AdamW
-from weights.model_path import rgb_3d_model_path_selection
+from utils.model_path import rgb_3d_model_path_selection
 
 
 model_names = sorted(name for name in models.__dict__
@@ -41,7 +41,7 @@ dataset_names = sorted(name for name in datasets.__all__)
 parser = argparse.ArgumentParser(description='PyTorch Two-Stream Action Recognition')
 #parser.add_argument('--data', metavar='DIR', default='./datasets/ucf101_frames',
 #                    help='path to dataset')
-parser.add_argument('--settings', metavar='DIR', default='/data/video/vod_tag02/data/AUSTL/train_img_c',
+parser.add_argument('--settings', metavar='DIR', default='/data/AUTSL/train_img_c',
                     help='path to datset setting files')
 #parser.add_argument('--modality', '-m', metavar='MODALITY', default='rgb',
 #                    choices=["rgb", "flow"],
@@ -72,9 +72,9 @@ parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum (default: 0.9)')
 parser.add_argument('--weight-decay', '--wd', default=1e-3, type=float,
                     metavar='W', help='weight decay (default: 1e-3)')
-parser.add_argument('--print-freq', default=400, type=int,
+parser.add_argument('--print-freq', default=100, type=int,
                     metavar='N', help='print frequency (default: 400)')
-parser.add_argument('--save-freq', default=1, type=int,
+parser.add_argument('--save-freq', default=100, type=int,
                     metavar='N', help='save frequency (default: 1)')
 parser.add_argument('--num-seg', default=1, type=int,
                     metavar='N', help='Number of segments in dataloader (default: 1)')
@@ -84,6 +84,10 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('-c', '--continue', dest='contine', action='store_true',
                     help='evaluate model on validation set')
+
+logging.basicConfig(filename='log.log', encoding='utf-8', level=logging.INFO)
+
+#python two_stream_bert2.py --split=1 --arch=rgb_resneXt3D64f101_bert10_FRMB --workers=2 --batch-size=8 --iter-size=16 --print-freq=1 --dataset=sign --lr=1e-5
 
 best_prec1 = 0
 best_loss = 30
@@ -171,7 +175,7 @@ def main():
     elif args.dataset=='window':
         dataset='./datasets/window_frames'
     elif args.dataset=="sign":
-        dataset="/data/video/vod_tag02/data/AUSTL/train_img_c"
+        dataset="/data/AUTSL/train_img_c"
     else:
         print("No convenient dataset entered, exiting....")
         return 0
@@ -274,10 +278,10 @@ def main():
             ])
 
     # data loading
-    train_setting_file = "train_%s_split%d.txt" % (modality, args.split)
-    train_split_file = os.path.join(args.settings, args.dataset, train_setting_file)
-    val_setting_file = "val_%s_split%d.txt" % (modality, args.split)
-    val_split_file = os.path.join(args.settings, args.dataset, val_setting_file)
+    train_setting_file = "train_%s_split%02d.txt" % (modality, args.split)
+    train_split_file = os.path.join(args.settings, train_setting_file)
+    val_setting_file = "val_%s_split%02d.txt" % (modality, args.split)
+    val_split_file = os.path.join(args.settings, val_setting_file)
     if not os.path.exists(train_split_file) or not os.path.exists(val_split_file):
         print("No split file exists in %s directory. Preprocess the dataset first" % (args.settings))
 
@@ -349,6 +353,7 @@ def main():
             checkpoint_name = "%03d_%s" % (epoch + 1, "checkpoint.pth.tar")
             if is_best:
                 print("Model son iyi olarak kaydedildi")
+                logging.info("save best checkpoint {}".format(checkpoint_name))
                 save_checkpoint({
                     'epoch': epoch + 1,
                     'arch': args.arch,
@@ -530,8 +535,11 @@ def train(train_loader, model, criterion, criterion2, optimizer, epoch,modality)
             
         if (i+1) % args.print_freq == 0:
             print('[%d] time: %.3f loss: %.4f' %(i,batch_time.avg,lossesClassification.avg))
+            logging.info('[%d] time: %.3f loss: %.4f' %(i,batch_time.avg,lossesClassification.avg))
           
     print(' * Epoch: {epoch} Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n'
+          .format(epoch = epoch, top1=top1, top3=top3, lossClassification=lossesClassification))
+    logging.info(' * Epoch: {epoch} Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n'
           .format(epoch = epoch, top1=top1, top3=top3, lossClassification=lossesClassification))
           
     writer.add_scalar('data/classification_loss_training', lossesClassification.avg, epoch)
@@ -585,6 +593,8 @@ def validate(val_loader, model, criterion,criterion2,modality):
     
     
         print(' * * Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n' 
+              .format(top1=top1, top3=top3, lossClassification=lossesClassification))
+        logging.info(' * * Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n' 
               .format(top1=top1, top3=top3, lossClassification=lossesClassification))
 
     return top1.avg, top3.avg, lossesClassification.avg

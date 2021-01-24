@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: LTM
+spec:
+  template:
+    spec:
+      containers:
+      - name: LTM
+        image: byeongjokim/ltm:latest
+        command: ["python",  "two_stream_bert2.py"]
+        resources:
+          limits:
+            nvidia.com/gpu: 6
+        volumeMounts:
+        - mountPath: /data
+          name: videos
+      restartPolicy: Never
+      volumes:
+      - name: videos
+        hostPath:
+          path: /nfs/vod_tag02/data
+  backoffLimit: 2
