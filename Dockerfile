@@ -6,4 +6,4 @@ COPY . /app
 WORKDIR /app
 RUN pip install -r r.txt
 ENTRYPOINT ["python"]
-CMD ["two_stream_bert2.py"]
+CMD ["run.py"]

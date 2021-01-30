@@ -11,9 +11,12 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.utils.data
+from torch.optim import lr_scheduler
 
 import models
 import datasets
+import video_transforms
+from opt.AdamW import AdamW
 
 def build_model(arch, pre_trained, num_seg):
     if arch == "rgb_resneXt3D64f101_bert10_FRMB":
@@ -39,7 +42,7 @@ def accuracy(output, target, topk=(1,)):
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
-def train(train_loader, model, criterion, criterion2, optimizer, epoch):
+def train(length, input_size, train_loader, model, criterion, criterion2, optimizer, epoch):
     batch_time = AverageMeter()
     lossesClassification = AverageMeter()
     top1 = AverageMeter()
@@ -94,12 +97,12 @@ def train(train_loader, model, criterion, criterion2, optimizer, epoch):
             print('[%d] time: %.3f loss: %.4f' %(i,batch_time.avg,lossesClassification.avg))
             logging.info('[%d] time: %.3f loss: %.4f' %(i,batch_time.avg,lossesClassification.avg))
         
-    text = '[Train] Epoch: {epoch} Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n'
-          .format(epoch = epoch, top1=top1, top3=top3, lossClassification=lossesClassification)
+    text = '[Train] Epoch: {epoch} Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n'\
+    .format(epoch = epoch, top1=top1, top3=top3, lossClassification=lossesClassification)
     print(text)
     logging.info(text)
 
-def validate(val_loader, model, criterion, criterion2):
+def validate(length, input_size, val_loader, model, criterion, criterion2):
     batch_time = AverageMeter()
     lossesClassification = AverageMeter()
     top1 = AverageMeter()
@@ -127,8 +130,8 @@ def validate(val_loader, model, criterion, criterion2):
             batch_time.update(time.time() - end)
             end = time.time()
 
-    text = '[Eval] Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n' 
-            .format(top1=top1, top3=top3, lossClassification=lossesClassification)
+    text = '[Eval] Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n'\
+    .format(top1=top1, top3=top3, lossClassification=lossesClassification)
     print(text)
     logging.info(text)
 
@@ -231,10 +234,10 @@ def main(args):
     
     best_prec1 = 0
     for epoch in range(0, args.epochs):
-        train(train_loader, model, criterion, criterion2, optimizer, epoch)
+        train(length, input_size, train_loader, model, criterion, criterion2, optimizer, epoch)
 
         if (epoch + 1) % args.save_freq == 0:
-            prec1, prec3, lossClassification = validate(val_loader, model, criterion, criterion2)
+            prec1, prec3, lossClassification = validate(length, input_size, val_loader, model, criterion, criterion2)
             scheduler.step(lossClassification)
 
             if prec1 >= best_prec1:
