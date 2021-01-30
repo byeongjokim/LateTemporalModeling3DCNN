@@ -1,26 +1,26 @@
-# name: CI
+name: CI
 
-# on:
-#   push:
-#     branches: [ main ]
-#   pull_request:
-#     branches: [ main ]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     steps:          
-#       - name: Check out
-#         uses: actions/checkout@v2
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:          
+      - name: Check out
+        uses: actions/checkout@v2
       
-#       - name: Docker Login
-#         uses: docker/login-action@v1.8.0
-#         with:
-#           username: ${{ secrets.REGISTRY_USERNAME }}
-#           password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Docker Login
+        uses: docker/login-action@v1.8.0
+        with:
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
-#       - name: Build Images
-#         run: |
-#           docker build . -t byeongjokim/ltm
-#           docker push byeongjokim/ltm
+      - name: Build Images
+        run: |
+          docker build . -t byeongjokim/ltm
+          docker push byeongjokim/ltm
 

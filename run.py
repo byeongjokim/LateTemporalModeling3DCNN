@@ -16,6 +16,7 @@ from torch.optim import lr_scheduler
 import models
 import datasets
 import video_transforms
+import swats
 from opt.AdamW import AdamW
 
 def build_model(arch, pre_trained, num_seg):
@@ -154,6 +155,10 @@ def main(args):
     if not os.path.exists(args.savelocation):
         os.makedirs(args.savelocation)
     
+    now = time.time()
+    savelocation = os.path.join(args.savelocation, str(now))
+    os.makedirs(savelocation)
+    
     model = build_model(args.arch, args.pre, args.num_seg)
     optimizer = AdamW(model.parameters(), lr= args.lr, weight_decay=args.weight_decay)
 
@@ -254,7 +259,7 @@ def main(args):
                 "state_dict": model.state_dict(),
                 "prec1": prec1,
                 "optimizer": optimizer.state_dict()
-            }, is_best, checkpoint_name, args.saveLocation)
+            }, is_best, checkpoint_name, saveLocation)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
