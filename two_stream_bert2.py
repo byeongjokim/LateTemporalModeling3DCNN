@@ -43,6 +43,8 @@ parser = argparse.ArgumentParser(description='PyTorch Two-Stream Action Recognit
 #                    help='path to dataset')
 parser.add_argument('--settings', metavar='DIR', default='/data/AUTSL/train_img_c',
                     help='path to datset setting files')
+parser.add_argument('--weights', metavar='DIR', default='/data/AUTSL/weights',
+                    help='path to weight files')
 #parser.add_argument('--modality', '-m', metavar='MODALITY', default='rgb',
 #                    choices=["rgb", "flow"],
 #                    help='modality: rgb | flow')
