@@ -231,15 +231,12 @@ def main(args):
     # ])
     # test_file = os.path.join(args.datasetpath, args.testlist)
 
-    train_file = os.path.join(args.datasetpath, args.trainlist)
-    val_file = os.path.join(args.datasetpath, args.vallist)
     
-    
-    if not os.path.exists(train_file) or not os.path.exists(val_file):
+    if not os.path.exists(args.trainlist) or not os.path.exists(args.vallist):
         print("No split file exists in %s directory. Preprocess the dataset first" % (args.datasetpath))
     
     train_dataset = datasets.__dict__[args.dataset](root=args.datasetpath,
-                                                    source=train_file,
+                                                    source=args.trainlist,
                                                     phase="train",
                                                     modality="rgb",
                                                     is_color=True,
@@ -250,7 +247,7 @@ def main(args):
                                                     num_segments=args.num_seg)
     
     val_dataset = datasets.__dict__[args.dataset](root=args.datasetpath,
-                                                  source=val_file,
+                                                  source=args.vallist,
                                                   phase="val",
                                                   modality="rgb",
                                                   is_color=True,
@@ -291,7 +288,7 @@ def main(args):
                 "state_dict": model.state_dict(),
                 "prec1": prec1,
                 "optimizer": optimizer.state_dict()
-            }, is_best, checkpoint_name, saveLocation)
+            }, is_best, checkpoint_name, savelocation)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -327,7 +324,7 @@ if __name__=="__main__":
 
     parser.add_argument('--arch', '-a', default='rgb_resneXt3D64f101_bert10_FRMB',
                         help='models')
-    parser.add_argument('--pre', default='/data/AUTSL/weights/resnet-101-64f-kinetics.pth',
+    parser.add_argument('--pre', default='/data/AUTSL/weights/resnext-101-64f-kinetics.pth',
                         help='models')
 
     parser.add_argument('-j', '--workers', default=2, type=int,
