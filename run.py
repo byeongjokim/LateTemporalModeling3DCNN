@@ -19,9 +19,13 @@ import video_transforms
 import swats
 from opt.AdamW import AdamW
 
-def build_model(arch, pre_trained, num_seg):
+def build_model(arch, pre_trained, num_seg, resume):
     if arch == "rgb_resneXt3D64f101_bert10_FRMB":
         model = models.rgb_resneXt3D64f101_bert10_FRMB(modelPath=pre_trained, num_classes=226, length=num_seg)
+
+    if resume:
+        params = torch.load(resume)
+        model.load_state_dict(params["state_dict"])
 
     if torch.cuda.device_count() > 1:
         model=torch.nn.DataParallel(model)
@@ -98,8 +102,7 @@ def train(length, input_size, train_loader, model, criterion, criterion2, optimi
             print('[%d] time: %.3f loss: %.4f' %(i,batch_time.avg,lossesClassification.avg))
             logging.info('[%d] time: %.3f loss: %.4f' %(i,batch_time.avg,lossesClassification.avg))
         
-    text = '[Train] Epoch: {epoch} Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n'\
-    .format(epoch = epoch, top1=top1, top3=top3, lossClassification=lossesClassification)
+    text = '[Train] Epoch: {epoch} Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n'.format(epoch = epoch, top1=top1, top3=top3, lossClassification=lossesClassification)
     print(text)
     logging.info(text)
 
@@ -131,12 +134,31 @@ def validate(length, input_size, val_loader, model, criterion, criterion2):
             batch_time.update(time.time() - end)
             end = time.time()
 
-    text = '[Eval] Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n'\
-    .format(top1=top1, top3=top3, lossClassification=lossesClassification)
+    text = '[Eval] Prec@1 {top1.avg:.3f} Prec@3 {top3.avg:.3f} Classification Loss {lossClassification.avg:.4f}\n'.format(top1=top1, top3=top3, lossClassification=lossesClassification)
     print(text)
     logging.info(text)
 
     return top1.avg, top3.avg, lossesClassification.avg
+
+def test(length, input_size, test_loader, model, output_file):
+    output = open(output_file, "w")
+
+    model.eval()
+
+    total_pred = []
+
+    with torch.no_grad():
+        for i, (inputs, _) in enumerate(test_loader):
+            inputs = inputs.view(-1, length, 3, input_size, input_size).transpose(1,2)
+            inputs = inputs.cuda()
+
+            output, input_vectors, sequenceOut, _ = model(inputs)
+            
+            _, pred = output.data.topk(1, 1, True, True)
+            total_pred += pred.tolist()
+    
+    output.write(total_pred)
+    output.close()
 
 def save_checkpoint(state, is_best, filename, resume_path):
     cur_path = os.path.join(resume_path, filename)
@@ -158,8 +180,10 @@ def main(args):
     now = time.time()
     savelocation = os.path.join(args.savelocation, str(now))
     os.makedirs(savelocation)
+
+    logging.basicConfig(filename=os.path.join(savelocation, "log.log"), level=logging.INFO)
     
-    model = build_model(args.arch, args.pre, args.num_seg)
+    model = build_model(args.arch, args.pre, args.num_seg, args.resume)
     optimizer = AdamW(model.parameters(), lr= args.lr, weight_decay=args.weight_decay)
 
     criterion = nn.CrossEntropyLoss().cuda()
@@ -200,8 +224,16 @@ def main(args):
         normalize,
     ])
 
+    # test_transform = video_transforms.Compose([
+    #     video_transforms.CenterCrop((input_size)),
+    #     video_transforms.ToTensor2(),
+    #     normalize,
+    # ])
+    # test_file = os.path.join(args.datasetpath, args.testlist)
+
     train_file = os.path.join(args.datasetpath, args.trainlist)
     val_file = os.path.join(args.datasetpath, args.vallist)
+    
     
     if not os.path.exists(train_file) or not os.path.exists(val_file):
         print("No split file exists in %s directory. Preprocess the dataset first" % (args.datasetpath))
@@ -236,7 +268,7 @@ def main(args):
         val_dataset,
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
-    
+
     best_prec1 = 0
     for epoch in range(0, args.epochs):
         train(length, input_size, train_loader, model, criterion, criterion2, optimizer, epoch)
@@ -289,7 +321,9 @@ if __name__=="__main__":
     parser.add_argument('--trainlist', default='train_rgb_split01.txt',
                         help='path to train datset list')
     parser.add_argument('--vallist', default='val_rgb_split01.txt',
-                        help='path to val datset list')                        
+                        help='path to val datset list')               
+    parser.add_argument('--testlist', default='test_rgb_split00.txt',
+                        help='path to test datset list')
 
     parser.add_argument('--arch', '-a', default='rgb_resneXt3D64f101_bert10_FRMB',
                         help='models')
@@ -331,7 +365,7 @@ if __name__=="__main__":
 
     parser.add_argument('--savelocation', default="/data/AUTSL/checkpoint/", type=str,
                     help='path to saved checkpoint (default: /data/AUTSL/checkpoint/)')
-    
+                    
     args = parser.parse_args()
 
     main(args)
