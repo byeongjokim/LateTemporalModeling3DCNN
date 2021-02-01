@@ -46,6 +46,13 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].view(-1).float().sum(0)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
+    
+def save_checkpoint(state, is_best, filename, resume_path):
+    cur_path = os.path.join(resume_path, filename)
+    torch.save(state, cur_path)
+    best_path = os.path.join(resume_path, 'model_best.pth.tar')
+    if is_best:
+        shutil.copyfile(cur_path, best_path)
 
 def train(length, input_size, train_loader, model, criterion, criterion2, optimizer, epoch):
     batch_time = AverageMeter()
@@ -160,13 +167,6 @@ def test(length, input_size, test_loader, model, output_file):
     output.write(total_pred)
     output.close()
 
-def save_checkpoint(state, is_best, filename, resume_path):
-    cur_path = os.path.join(resume_path, filename)
-    torch.save(state, cur_path)
-    best_path = os.path.join(resume_path, 'model_best.pth.tar')
-    if is_best:
-        shutil.copyfile(cur_path, best_path)
-
 def main(args):
     global best_prec1, best_loss
 
@@ -271,6 +271,7 @@ def main(args):
         train(length, input_size, train_loader, model, criterion, criterion2, optimizer, epoch)
 
         if (epoch + 1) % args.save_freq == 0:
+            is_best = False
             prec1, prec3, lossClassification = validate(length, input_size, val_loader, model, criterion, criterion2)
             scheduler.step(lossClassification)
 
