@@ -21,7 +21,7 @@ from opt.AdamW import AdamW
 
 def build_model(arch, pre_trained, num_seg, resume):
     if arch == "rgb_Depth_r2plus1d_64f_34_bert10":
-        model = models.rgb_Depth_r2plus1d_64f_34_bert10(num_classes=226, length=num_seg)
+        model = models.rgb_Depth_r2plus1d_64f_34_bert10(num_classes=226, length=num_seg, modelPath=pre_trained)
 
     if resume:
         params = torch.load(resume)
@@ -318,7 +318,7 @@ class AverageMeter(object):
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='PyTorch Two-Stream Action Recognition')
 
-    parser.add_argument('--dataset', '-d', default='sign',
+    parser.add_argument('--dataset', '-d', default='signd',
                         choices=["sign", "signd"],
                         help='dataset: sign | signd')
     parser.add_argument('--datasetpath', default='/data/AUTSL/train_img_c',
@@ -332,7 +332,7 @@ if __name__=="__main__":
 
     parser.add_argument('--arch', '-a', default='rgb_Depth_r2plus1d_64f_34_bert10',
                         help='models')
-    parser.add_argument('--pre', default='/data/AUTSL/weights/resnext-101-64f-kinetics.pth',
+    parser.add_argument('--pre', default='/data/AUTSL/weights/r2plus1d_34_clip32_ig65m_from_scratch-449a7af9.pth',
                         help='models')
 
     parser.add_argument('-j', '--workers', default=2, type=int,

@@ -16,9 +16,9 @@ from .BERT.bert import  BERT5
 
 __all__ = [ 'rgb_Depth_r2plus1d_64f_34_bert10']
 
-def make_features():
+def make_features(modelPath):
     features = nn.Sequential(*list(
-            r2plus1d_34_32_ig65m(359, pretrained=True, progress=True).children())[:-2])
+            r2plus1d_34_32_ig65m(359, pretrained=modelPath, progress=True).children())[:-2])
 
     return features
 
@@ -35,8 +35,8 @@ class rgb_Depth_r2plus1d_64f_34_bert10(nn.Module):
         self.rgb_avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
         self.depth_avgpool = nn.AvgPool3d((1, 7, 7), stride=1)
         
-        self.rgb_features = make_features()
-        self.depth_features = make_features()
+        self.rgb_features = make_features(modelPath)
+        self.depth_features = make_features(modelPath)
 
         self.fc_input = nn.Linear(2 * self.hidden_size, self.hidden_size)
                 

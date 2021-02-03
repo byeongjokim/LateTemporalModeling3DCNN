@@ -352,7 +352,7 @@ def r2plus1d_34_8_ig65m(num_classes, pretrained=False, progress=False):
                        pretrained=pretrained, progress=progress)
 
 
-def r2plus1d_34_32_ig65m(num_classes, pretrained=False, progress=False):
+def r2plus1d_34_32_ig65m(num_classes, pretrained="", progress=False):
     """R(2+1)D 34-layer IG65M model for clips of length 32 frames.
     Args:
       num_classes: Number of classes in last classification layer
@@ -400,7 +400,7 @@ def flow_r2plus1d_34_32_ig65m(num_classes, pretrained=False, progress=False):
                        pretrained=pretrained, progress=progress)
 
 
-def r2plus1d_34(num_classes, pretrained=False, progress=False, arch=None):
+def r2plus1d_34(num_classes, pretrained="", progress=False, arch=None):
     model = VideoResNet(block=BasicBlock,
                         conv_makers=[Conv2Plus1D] * 4,
                         layers=[3, 4, 6, 3],
@@ -422,8 +422,7 @@ def r2plus1d_34(num_classes, pretrained=False, progress=False, arch=None):
             m.momentum = 0.9
 
     if pretrained:
-        state_dict = torch.hub.load_state_dict_from_url(model_urls[arch],
-                                                        progress=progress)
+        state_dict = torch.load(pretrained)
         model.load_state_dict(state_dict)
 
     return model
