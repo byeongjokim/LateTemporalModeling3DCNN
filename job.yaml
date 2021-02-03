@@ -8,7 +8,7 @@ spec:
       containers:
       - name: ltm
         image: byeongjokim/ltm:latest
-        command: ["python",  "rund.py", "-b", "32", "--print-freq", "1", "-j", "4", "--datasetpath", "/data/AUTSL/train_img_c", "--pre", "", "--trainlist", "/data/AUTSL/train_p_fg_img_c/train_rgb_split01.txt", "--vallist", "/data/AUTSL/train_p_fg_img_c/val_rgb_split01.txt"]
+        command: ["python",  "rund.py", "-b", "8", "--print-freq", "1", "-j", "4", "--dataset", "signd", "--datasetpath", "/data/AUTSL/train_img_c", "--pre", "", "--trainlist", "/data/AUTSL/train_p_fg_img_c/train_rgb_split01.txt", "--vallist", "/data/AUTSL/train_p_fg_img_c/val_rgb_split01.txt"]
         resources:
           limits:
             nvidia.com/gpu: 8
@@ -25,4 +25,3 @@ spec:
       - name: dshm
         emptyDir:
           medium: Memory
-  backoffLimit: 2
