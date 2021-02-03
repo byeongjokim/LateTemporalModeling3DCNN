@@ -39,6 +39,7 @@ def ReadSegmentRGB(path, offsets, new_height, new_width, new_length, is_color, n
     interpolation = cv2.INTER_LINEAR
 
     sampled_list = []
+    d_list = []
     for offset_id in range(len(offsets)):
         offset = offsets[offset_id]
         for length_id in range(1, new_length+1):
@@ -73,9 +74,14 @@ def ReadSegmentRGB(path, offsets, new_height, new_width, new_length, is_color, n
                 d_img = d_img_origin
 
             cv_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+            d_img = cv2.cvtColor(d_img, cv2.COLOR_BGR2RGB)
+
             sampled_list.append(cv_img)
+            d_list.append(d_img)
+
     clip_input = np.concatenate(sampled_list, axis=2)
-    return clip_input
+    d_input = np.concatenate(d_list, axis=2)
+    return clip_input, d_input
 
 
 def ReadSegmentFlow(path, offsets, new_height, new_width, new_length, is_color, name_pattern,duration):
@@ -151,14 +157,7 @@ class signd(data.Dataset):
         self.clips = clips
         self.ensemble_training = ensemble_training
 
-        if name_pattern:
-            self.name_pattern = name_pattern
-        else:
-            if self.modality == "rgb":
-                self.name_pattern = "img_%05d.jpg"
-            elif self.modality == "flow":
-                self.name_pattern = "flow_%s_%05d"
-        
+        self.name_pattern = "img_%05d.jpg"
         self.d_name_pattern = "img_d_%05d.jpg"
 
         self.is_color = is_color
@@ -202,38 +201,30 @@ class signd(data.Dataset):
         
 
 
-        if self.modality == "rgb":
-            clip_input = ReadSegmentRGB(path,
-                                        offsets,
-                                        self.new_height,
-                                        self.new_width,
-                                        self.new_length,
-                                        self.is_color,
-                                        self.name_pattern,
-                                        duration,
-                                        d_name_pattern = self.d_name_pattern
-                                        )
-        elif self.modality == "flow":
-            clip_input = ReadSegmentFlow(path,
-                                        offsets,
-                                        self.new_height,
-                                        self.new_width,
-                                        self.new_length,
-                                        self.is_color,
-                                        self.name_pattern,
-                                        duration
-                                        )
+        clip_input, d_input = ReadSegmentRGB(
+            path,
+            offsets,
+            self.new_height,
+            self.new_width,
+            self.new_length,
+            self.is_color,
+            self.name_pattern,
+            duration,
+            d_name_pattern = self.d_name_pattern
+        )
             
         else:
             print("No such modality %s" % (self.modality))
 
         if self.transform is not None:
             clip_input = self.transform(clip_input)
+            d_input = self.transform(d_input)
         if self.target_transform is not None:
             target = self.target_transform(target)
         if self.video_transform is not None:
-            clip_input = self.video_transform(clip_input)   
-        return clip_input, target
+            clip_input = self.video_transform(clip_input)
+            d_input = self.video_transform(d_input)
+        return clip_input, d_input, target
                 
 
 

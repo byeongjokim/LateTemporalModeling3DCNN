@@ -237,7 +237,6 @@ class VideoResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-
         x = self.avgpool(x)
         # Flatten the layer to fc
         x = x.flatten(1)

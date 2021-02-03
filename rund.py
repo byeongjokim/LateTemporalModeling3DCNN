@@ -20,8 +20,8 @@ import swats
 from opt.AdamW import AdamW
 
 def build_model(arch, pre_trained, num_seg, resume):
-    if arch == "rgb_resneXt3D64f101_bert10_FRMB":
-        model = models.rgb_resneXt3D64f101_bert10_FRMB(modelPath=pre_trained, num_classes=226, length=num_seg)
+    if arch == "rgb_Depth_r2plus1d_64f_34_bert10":
+        model = models.rgb_Depth_r2plus1d_64f_34_bert10(num_classes=226, length=num_seg)
 
     if resume:
         params = torch.load(resume)
@@ -70,12 +70,16 @@ def train(length, input_size, train_loader, model, criterion, criterion2, optimi
     acc_mini_batch_top3 = 0.0
     totalSamplePerIter=0
 
-    for i, (inputs, targets) in enumerate(train_loader):
-        inputs=inputs.view(-1,length,3,input_size,input_size).transpose(1,2)
-        inputs = inputs.cuda()
+    for i, (rgb_inputs, d_inputs, targets) in enumerate(train_loader):
+        rgb_inputs = rgb_inputs.view(-1, length, 3, input_size, input_size).transpose(1,2)
+        rgb_inputs = rgb_inputs.cuda()
+
+        d_inputs = d_inputs.view(-1, length, 3, input_size, input_size).transpose(1,2)
+        d_inputs = d_inputs.cuda()
+
         targets = targets.cuda()
 
-        output, input_vectors, sequenceOut, maskSample = model(inputs)
+        output, input_vectors, sequenceOut, maskSample = model(rgb_inputs, d_inputs)
 
         prec1, prec3 = accuracy(output.data, targets, topk=(1, 3))
         acc_mini_batch += prec1.item()
@@ -124,13 +128,16 @@ def validate(length, input_size, val_loader, model, criterion, criterion2):
     end = time.time()
 
     with torch.no_grad():
-        for i, (inputs, targets) in enumerate(val_loader):
-            inputs=inputs.view(-1,length,3,input_size,input_size).transpose(1,2)
-            
-            inputs = inputs.cuda()
+        for i, (rgb_inputs, d_inputs, targets) in enumerate(val_loader):
+            rgb_inputs = rgb_inputs.view(-1, length, 3, input_size, input_size).transpose(1,2)
+            rgb_inputs = rgb_inputs.cuda()
+
+            d_inputs = d_inputs.view(-1, length, 3, input_size, input_size).transpose(1,2)
+            d_inputs = d_inputs.cuda()
+
             targets = targets.cuda()
 
-            output, input_vectors, sequenceOut, _ = model(inputs)
+            output, input_vectors, sequenceOut, _ = model(rgb_inputs, d_inputs)
 
             lossClassification = criterion(output, targets)
             prec1, prec3 = accuracy(output.data, targets, topk=(1, 3))
@@ -147,25 +154,25 @@ def validate(length, input_size, val_loader, model, criterion, criterion2):
 
     return top1.avg, top3.avg, lossesClassification.avg
 
-def test(length, input_size, test_loader, model, output_file):
-    output = open(output_file, "w")
+# def test(length, input_size, test_loader, model, output_file):
+#     output = open(output_file, "w")
 
-    model.eval()
+#     model.eval()
 
-    total_pred = []
+#     total_pred = []
 
-    with torch.no_grad():
-        for i, (inputs, _) in enumerate(test_loader):
-            inputs = inputs.view(-1, length, 3, input_size, input_size).transpose(1,2)
-            inputs = inputs.cuda()
+#     with torch.no_grad():
+#         for i, (inputs, _) in enumerate(test_loader):
+#             inputs = inputs.view(-1, length, 3, input_size, input_size).transpose(1,2)
+#             inputs = inputs.cuda()
 
-            output, input_vectors, sequenceOut, _ = model(inputs)
+#             output, input_vectors, sequenceOut, _ = model(inputs)
             
-            _, pred = output.data.topk(1, 1, True, True)
-            total_pred += pred.tolist()
+#             _, pred = output.data.topk(1, 1, True, True)
+#             total_pred += pred.tolist()
     
-    output.write(total_pred)
-    output.close()
+#     output.write(total_pred)
+#     output.close()
 
 def main(args):
     global best_prec1, best_loss
@@ -206,14 +213,14 @@ def main(args):
     length = 64
 
     scale_ratios = [1.0, 0.875, 0.75, 0.66]
-    clip_mean = [114.7748, 107.7354, 99.4750] * args.num_seg * length
-    clip_std = [1, 1, 1] * args.num_seg * length
+
+    clip_mean = [0.43216, 0.394666, 0.37645] * args.num_seg * length
+    clip_std = [0.22803, 0.22145, 0.216989] * args.num_seg * length
 
     normalize = video_transforms.Normalize(mean=clip_mean, std=clip_std)
 
     train_transform = video_transforms.Compose([
-        video_transforms.MultiScaleCrop((input_size, input_size), scale_ratios),
-        video_transforms.RandomHorizontalFlip(),
+        video_transforms.CenterCrop(input_size),
         video_transforms.ToTensor2(),
         normalize,
     ])
@@ -323,7 +330,7 @@ if __name__=="__main__":
     parser.add_argument('--testlist', default='test_rgb_split00.txt',
                         help='path to test datset list')
 
-    parser.add_argument('--arch', '-a', default='rgb_resneXt3D64f101_bert10_FRMB',
+    parser.add_argument('--arch', '-a', default='rgb_Depth_r2plus1d_64f_34_bert10',
                         help='models')
     parser.add_argument('--pre', default='/data/AUTSL/weights/resnext-101-64f-kinetics.pth',
                         help='models')
