@@ -213,9 +213,6 @@ class signd(data.Dataset):
             d_name_pattern = self.d_name_pattern
         )
             
-        else:
-            print("No such modality %s" % (self.modality))
-
         if self.transform is not None:
             clip_input = self.transform(clip_input)
             d_input = self.transform(d_input)
