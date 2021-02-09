@@ -22,9 +22,7 @@ from opt.AdamW import AdamW
 def build_model(arch, pre_trained, num_seg, resume):
     if arch == "rgb_Depth_r2plus1d_64f_34_bert10":
         model = models.rgb_Depth_r2plus1d_64f_34_bert10(num_classes=226, length=num_seg, modelPath=pre_trained)
-    elif arch == "rgb_Depth_concat_r2plus1d_64f_34_bert10":
-        model = models.rgb_Depth_concat_r2plus1d_64f_34_bert10(num_classes=226, length=num_seg, modelPath=pre_trained)
-        
+
     if resume:
         params = torch.load(resume)
         model.load_state_dict(params["state_dict"])

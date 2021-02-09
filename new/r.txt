@@ -1,0 +1,6 @@
+numpy==1.15.0
+tensorboardx==1.6
+opencv-python==4.1.2.30
+fvcore
+simplejson==3.17.0
+pytorch-swats==0.1.0
