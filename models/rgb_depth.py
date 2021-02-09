@@ -104,8 +104,8 @@ class rgb_Depth_concat_r2plus1d_64f_34_bert10(nn.Module):
         self.rgb_features = make_features(modelPath)
         self.depth_features = make_features(modelPath)
 
-        self.fc_rgb = nn.Linear(self.hidden_size, self.hidden_size/2)
-        self.fc_d = nn.Linear(self.hidden_size, self.hidden_size/2)
+        self.fc_rgb = nn.Linear(self.hidden_size, int(self.hidden_size/2))
+        self.fc_d = nn.Linear(self.hidden_size, int(self.hidden_size/2))
                 
         self.bert = BERT5(self.hidden_size, 8 , hidden=self.hidden_size, n_layers=self.n_layers, attn_heads=self.attn_heads)
         print(sum(p.numel() for p in self.bert.parameters() if p.requires_grad))
