@@ -90,7 +90,7 @@ class rgb_Depth_r2plus1d_64f_34_bert10(nn.Module):
 
 class rgb_Depth_concat_r2plus1d_64f_34_bert10(nn.Module):
     def __init__(self, num_classes , length, modelPath=''):
-        super(rgb_Depth_r2plus1d_64f_34_bert10, self).__init__()
+        super(rgb_Depth_concat_r2plus1d_64f_34_bert10, self).__init__()
         self.hidden_size=512
         self.n_layers=1
         self.attn_heads=8
